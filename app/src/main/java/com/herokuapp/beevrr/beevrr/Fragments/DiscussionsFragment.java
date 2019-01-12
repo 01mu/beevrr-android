@@ -13,12 +13,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
-import com.herokuapp.beevrr.beevrr.Retrofit.APIClient;
-import com.herokuapp.beevrr.beevrr.Retrofit.APIInterface;
 
-public class TemplateFragment extends Fragment {
+public class DiscussionsFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -27,15 +24,11 @@ public class TemplateFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    Preferences preferences;
-    APIInterface apiService;
-    View view;
-
-    public TemplateFragment() {
+    public DiscussionsFragment() {
     }
 
-    public static TemplateFragment newInstance(String param1, String param2) {
-        TemplateFragment fragment = new TemplateFragment();
+    public static DiscussionsFragment newInstance(String param1, String param2) {
+        DiscussionsFragment fragment = new DiscussionsFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -50,17 +43,12 @@ public class TemplateFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-
-        preferences = new Preferences(getActivity());
-        apiService = APIClient.getClient(getActivity()).create(APIInterface.class);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view =  inflater.inflate(R.layout.fragment_login, container, false);
-
-        return view;
+        return inflater.inflate(R.layout.fragment_discussions, container, false);
     }
 
     public void onButtonPressed(Uri uri) {

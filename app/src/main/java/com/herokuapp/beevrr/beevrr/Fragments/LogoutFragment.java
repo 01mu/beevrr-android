@@ -8,6 +8,8 @@ package com.herokuapp.beevrr.beevrr.Fragments;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,8 +19,13 @@ import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
 import com.herokuapp.beevrr.beevrr.Retrofit.APIClient;
 import com.herokuapp.beevrr.beevrr.Retrofit.APIInterface;
+import com.jayway.jsonpath.JsonPath;
 
-public class TemplateFragment extends Fragment {
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class LogoutFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -31,11 +38,33 @@ public class TemplateFragment extends Fragment {
     APIInterface apiService;
     View view;
 
-    public TemplateFragment() {
+    private void logout() {
+        apiService.logout().enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                String result = String.valueOf(response.body());
+                String status = JsonPath.read(result, "$['status']");
+
+                if (status.compareTo("failure") > 0) {
+                    preferences.setLoginStatus(false);
+                    Snackbar.make(view, "Logged out!", Snackbar.LENGTH_SHORT).show();
+                } else {
+                    Snackbar.make(view, "Not logged in!", Snackbar.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+
+            }
+        });
     }
 
-    public static TemplateFragment newInstance(String param1, String param2) {
-        TemplateFragment fragment = new TemplateFragment();
+    public LogoutFragment() {
+    }
+
+    public static LogoutFragment newInstance(String param1, String param2) {
+        LogoutFragment fragment = new LogoutFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -58,7 +87,9 @@ public class TemplateFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view =  inflater.inflate(R.layout.fragment_login, container, false);
+        view =  inflater.inflate(R.layout.fragment_logout, container, false);
+
+        logout();
 
         return view;
     }

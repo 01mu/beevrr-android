@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <group
+        android:id="@+id/nav_general"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_discussions"
+            android:icon="@drawable/ic_person_black_24dp"
+            android:title="Discussions" />
+        <item
+            android:id="@+id/nav_search"
+            android:icon="@drawable/ic_person_black_24dp"
+            android:title="Search" />
+    </group>
+    <group
+        android:id="@+id/nav_dash"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_dashboard"
+            android:icon="@drawable/ic_person_black_24dp"
+            android:title="Dashboard" />
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_person_black_24dp"
+            android:title="Logout" />
+    </group>
+    <group
+        android:id="@+id/nav_user_specific"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_login"
+            android:icon="@drawable/ic_person_black_24dp"
+            android:title="Login" />
+        <item
+            android:id="@+id/nav_register"
+            android:icon="@drawable/ic_person_black_24dp"
+            android:title="Register" />
+    </group>
+</menu>

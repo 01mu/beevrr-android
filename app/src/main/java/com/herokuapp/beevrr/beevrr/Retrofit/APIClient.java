@@ -6,29 +6,19 @@
 package com.herokuapp.beevrr.beevrr.Retrofit;
 
 import android.app.Activity;
-import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.herokuapp.beevrr.beevrr.Preferences;
 
 import org.riversun.okhttp3.OkHttp3CookieHelper;
 
-import java.io.IOException;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
+import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.Interceptor;
-import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-public class APIClient {
+public class APIClient implements Serializable {
     private static final String BASE_URL = "https://beevrr.herokuapp.com/";
 
     private static Retrofit retrofit = null;
