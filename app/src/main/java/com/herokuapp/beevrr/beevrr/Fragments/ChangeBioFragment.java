@@ -11,11 +11,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.Methods;
@@ -29,7 +31,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LoginFragment extends Fragment {
+public class ChangeBioFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -42,30 +44,41 @@ public class LoginFragment extends Fragment {
     APIInterface apiService;
     View view;
 
-    Button login;
-    TextView viewUsername;
-    TextView viewPassword;
+    private TextView changeBioField;
+    private Button changeBioSubmit;
+
+    private String getBio;
+
+    public ChangeBioFragment() {
+    }
+
+    public static ChangeBioFragment newInstance(String param1, String param2) {
+        ChangeBioFragment fragment = new ChangeBioFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM2, param2);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     private void initViews() {
-        login = view.findViewById(R.id.login);
-        viewUsername = view.findViewById(R.id.username);
-        viewPassword = view.findViewById(R.id.password);
+        changeBioField = view.findViewById(R.id.change_bio_field);
+        changeBioSubmit = view.findViewById(R.id.change_bio_submit);
     }
 
     private void initButtonListeners() {
-        login.setOnClickListener(new View.OnClickListener() {
+        changeBioSubmit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                login();
-                login.onEditorAction(EditorInfo.IME_ACTION_DONE);
+                postBioChange();
+                changeBioSubmit.onEditorAction(EditorInfo.IME_ACTION_DONE);
             }
         });
     }
 
-    private void login() {
-        String user = viewUsername.getText().toString();
-        String pw = viewPassword.getText().toString();
+    private void postBioChange() {
+        String newBio = changeBioField.getText().toString();
 
-        apiService.login(user, pw).enqueue(new Callback<String>() {
+        apiService.changeBio(newBio).enqueue(new Callback<String>() {
             String snackMessage;
             String result;
             String status;
@@ -75,12 +88,13 @@ public class LoginFragment extends Fragment {
                 result = String.valueOf(response.body());
                 status = JsonPath.read(result, "$['status']");
 
-                if (status.compareTo("failure") > 0) {
-                    snackMessage = "Logged in!";
-                    preferences.setLoginStatus(true);
-                } else {
-                    snackMessage = "Login failed!";
+                if (status.compareTo("not_logged_in") == 0) {
+                    snackMessage = "Not logged in!";
                     preferences.setLoginStatus(false);
+                } else if (status.compareTo("failure") == 0) {
+                    snackMessage = "Bio change failed!";
+                } else {
+                    snackMessage = "Bio changed!";
                 }
 
                 Methods.setCookies(response, preferences);
@@ -94,18 +108,6 @@ public class LoginFragment extends Fragment {
         });
     }
 
-    public LoginFragment() {
-    }
-
-    public static LoginFragment newInstance(String param1, String param2) {
-        LoginFragment fragment = new LoginFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,15 +118,19 @@ public class LoginFragment extends Fragment {
 
         preferences = new Preferences(getActivity());
         apiService = APIClient.getClient(getActivity()).create(APIInterface.class);
+
+        getBio = getArguments().getString("bio");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_login, container, false);
+        view = inflater.inflate(R.layout.fragment_change_bio, container, false);
 
         initViews();
         initButtonListeners();
+
+        changeBioField.setText(getBio);
 
         return view;
     }

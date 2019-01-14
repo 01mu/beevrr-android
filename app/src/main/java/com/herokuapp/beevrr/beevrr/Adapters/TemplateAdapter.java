@@ -1,3 +1,8 @@
+/*
+    beevrr-android
+    github.com/01mu
+ */
+
 package com.herokuapp.beevrr.beevrr.Adapters;
 
 import android.content.Context;
@@ -25,7 +30,7 @@ public class TemplateAdapter
     @Override
     public ProductViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mCtx);
-        View view = inflater.inflate(R.layout.dashboard_stats_adapter, null);
+        View view = inflater.inflate(R.layout.adapter_dashboard_stats, null);
         return new ProductViewHolder(view);
     }
 

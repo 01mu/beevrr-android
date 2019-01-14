@@ -5,80 +5,54 @@
 
 package com.herokuapp.beevrr.beevrr;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 
+import com.herokuapp.beevrr.beevrr.Fragments.ChangeBioFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.ChangePasswordFragment;
 import com.herokuapp.beevrr.beevrr.Fragments.DashboardFragment;
 import com.herokuapp.beevrr.beevrr.Fragments.DiscussionsFragment;
 import com.herokuapp.beevrr.beevrr.Fragments.LoginFragment;
 import com.herokuapp.beevrr.beevrr.Fragments.LogoutFragment;
 import com.herokuapp.beevrr.beevrr.Fragments.RegisterFragment;
-import com.jayway.jsonpath.JsonPath;
+import com.herokuapp.beevrr.beevrr.Fragments.UserActivityFragment;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import static com.herokuapp.beevrr.beevrr.R.drawable.ic_menu_black_24dp;
 
 public class MainActivity extends AppCompatActivity implements
-    DiscussionsFragment.OnFragmentInteractionListener,
-    LoginFragment.OnFragmentInteractionListener,
-    LogoutFragment.OnFragmentInteractionListener,
-    DashboardFragment.OnFragmentInteractionListener,
-    RegisterFragment.OnFragmentInteractionListener{
+        DiscussionsFragment.OnFragmentInteractionListener,
+        LoginFragment.OnFragmentInteractionListener,
+        LogoutFragment.OnFragmentInteractionListener,
+        DashboardFragment.OnFragmentInteractionListener,
+        RegisterFragment.OnFragmentInteractionListener,
+        ChangeBioFragment.OnFragmentInteractionListener,
+        ChangePasswordFragment.OnFragmentInteractionListener,
+        UserActivityFragment.OnFragmentInteractionListener {
+    FragmentManager fm;
 
     private NavigationView navigationView;
     private DrawerLayout mDrawerLayout;
 
-    DiscussionsFragment discussionsFragment;
-    LoginFragment loginFragment;
-    LogoutFragment logoutFragment;
-    DashboardFragment dashboardFragment;
-    RegisterFragment registerFragment;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        fm = getSupportFragmentManager();
+
         setNavigationViews();
         setNavigationSelector();
 
-        discussionsFragment = new DiscussionsFragment();
-        loginFragment = new LoginFragment();
-        logoutFragment = new LogoutFragment();
-        dashboardFragment = new DashboardFragment();
-        registerFragment = new RegisterFragment();
-
-        setFragment(discussionsFragment);
-    }
-
-    private void setFragment(Fragment fragment) {
-        FragmentManager fm = getSupportFragmentManager();
-
-        for (int i = 0; i < fm.getBackStackEntryCount(); i++) {
-            fm.popBackStack();
-        }
-
-        if (!fragment.isAdded()) {
-            FragmentTransaction fragmentTransaction =
-                    getSupportFragmentManager().beginTransaction();
-
-            fragmentTransaction.replace(R.id.main_frame, fragment).commit();
-        }
+        Methods.setFragment(new DiscussionsFragment(), fm);
     }
 
     private void setNavigationViews() {
@@ -91,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements
 
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_black_24dp);
+            actionBar.setHomeAsUpIndicator(ic_menu_black_24dp);
         }
 
         navigationView = findViewById(R.id.nav_view);
@@ -101,6 +75,8 @@ public class MainActivity extends AppCompatActivity implements
     private void setNavigationSelector() {
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
+                    Fragment set;
+
                     @Override
                     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                         menuItem.setChecked(true);
@@ -108,23 +84,26 @@ public class MainActivity extends AppCompatActivity implements
 
                         switch (menuItem.getItemId()) {
                             case R.id.nav_discussions:
-                                setFragment(discussionsFragment);
+                                set = new DiscussionsFragment();
                                 break;
                             case R.id.nav_login:
-                                setFragment(loginFragment);
+                                set = new LoginFragment();
                                 break;
                             case R.id.nav_logout:
-                                setFragment(logoutFragment);
+                                set = new LogoutFragment();
                                 break;
                             case R.id.nav_dashboard:
-                                setFragment(dashboardFragment);
+                                set = new DashboardFragment();
                                 break;
                             case R.id.nav_register:
-                                setFragment(registerFragment);
+                                set = new RegisterFragment();
                                 break;
                             default:
+                                set = new DiscussionsFragment();
                                 break;
                         }
+
+                        Methods.setFragment(set, fm);
 
                         return true;
                     }
@@ -142,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri){
+    public void onFragmentInteraction(Uri uri) {
 
     }
 }

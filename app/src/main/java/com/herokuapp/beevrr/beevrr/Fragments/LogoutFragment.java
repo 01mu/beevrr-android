@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
 import com.herokuapp.beevrr.beevrr.Retrofit.APIClient;
@@ -40,22 +41,30 @@ public class LogoutFragment extends Fragment {
 
     private void logout() {
         apiService.logout().enqueue(new Callback<String>() {
+            String snackMessage;
+            String result;
+            String status;
+
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                String result = String.valueOf(response.body());
-                String status = JsonPath.read(result, "$['status']");
+                result = String.valueOf(response.body());
+                status = JsonPath.read(result, "$['status']");
 
                 if (status.compareTo("failure") > 0) {
+                    snackMessage = "Logged out!";
                     preferences.setLoginStatus(false);
-                    Snackbar.make(view, "Logged out!", Snackbar.LENGTH_SHORT).show();
                 } else {
-                    Snackbar.make(view, "Not logged in!", Snackbar.LENGTH_SHORT).show();
+                    snackMessage = "Not logged in!";
+                    preferences.setLoginStatus(false);
                 }
+
+                Methods.setCookies(response, preferences);
+                Methods.snackbar(view, getActivity(), snackMessage);
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-
+                Methods.snackbar(view, getActivity(), "Failed to connect!");
             }
         });
     }

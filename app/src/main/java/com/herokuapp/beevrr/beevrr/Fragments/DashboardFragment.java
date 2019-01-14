@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,13 +19,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.DashboardStat;
 import com.herokuapp.beevrr.beevrr.Adapters.DashboardStatsAdapter;
+import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
 import com.herokuapp.beevrr.beevrr.Retrofit.APIClient;
@@ -35,7 +37,6 @@ import org.apache.commons.text.WordUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -54,68 +55,32 @@ public class DashboardFragment extends Fragment {
     APIInterface apiService;
     View view;
 
-    private CardView bioCard;
-    private CardView changeBioCard;
-    private CardView changePWCard;
-
-    private LinearLayout statsHeader;
-    private LinearLayout bioHeader;
-    private LinearLayout changeBioHeader;
-    private LinearLayout changePWHeader;
-
+    private LinearLayout dashboardParent;
     private TextView bio;
-    private TextView changeBioField;
-    private TextView changePWFieldOld;
-    private TextView changePWFieldOldC;
-    private TextView changePWFieldNew;
-    private TextView changePWFieldNewC;
+    private Button changeBioButton;
+    private Button changePasswordButton;
+    private LinearLayout progressBar;
+    private CardView viewFullActivity;
 
     private RecyclerView mRecyclerView;
-
-    private Button changeBioSubmit;
-    private Button changePWSubmit;
-
     private RecyclerView.Adapter dashboardStatsAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private void initButtonListeners() {
-        changeBioSubmit.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                postBioChange();
-                changeBioSubmit.onEditorAction(EditorInfo.IME_ACTION_DONE);
-            }
-        });
+    private FragmentManager fm;
+    private String getBio;
 
-        changePWSubmit.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                postPWChange();
-                changePWSubmit.onEditorAction(EditorInfo.IME_ACTION_DONE);
-            }
-        });
-    }
+    private String[] types = {"total_responses", "active_responses", "total_votes",
+            "active_votes", "total_discussions", "active_discussions"};
 
     private void initViews() {
-        bioCard = view.findViewById(R.id.bio_card);
-        changeBioCard = view.findViewById(R.id.change_bio_card);
-        changePWCard = view.findViewById(R.id.change_pw_card);
-
-        statsHeader = view.findViewById(R.id.stats_header);
-        bioHeader = view.findViewById(R.id.bio_header);
-        changeBioHeader = view.findViewById(R.id.change_bio_header);
-        changePWHeader =  view.findViewById(R.id.change_pw_header);
-
+        dashboardParent = view.findViewById(R.id.dashboard_parent);
         bio = view.findViewById(R.id.bio);
-        changeBioField = view.findViewById(R.id.change_bio_field);
-        changePWFieldOld = view.findViewById(R.id.new_password);
-        changePWFieldOldC = view.findViewById(R.id.confirm_new_password);
-        changePWFieldNew = view.findViewById(R.id.old_password);
-        changePWFieldNewC = view.findViewById(R.id.confirm_old_password);
+        changeBioButton = view.findViewById(R.id.change_bio_button);
+        changePasswordButton = view.findViewById(R.id.change_password_button);
+        progressBar = view.findViewById(R.id.progress_bar);
+        viewFullActivity = view.findViewById(R.id.view_full_activity_card);
 
         mRecyclerView = view.findViewById(R.id.user_stats);
-
-        changeBioSubmit = view.findViewById(R.id.change_bio_submit);
-        changePWSubmit = view.findViewById(R.id.change_pw_submit);
-
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setNestedScrollingEnabled(false);
 
@@ -123,126 +88,23 @@ public class DashboardFragment extends Fragment {
         mRecyclerView.setLayoutManager(mLayoutManager);
     }
 
-    private void updateVisibility(int type) {
-        bioCard.setVisibility(type);
-        changeBioCard.setVisibility(type);
-        changePWCard.setVisibility(type);
+    private void initButtonListeners() {
+        changeBioButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Bundle bundle = new Bundle();
+                Fragment fragment = new ChangeBioFragment();
 
-        statsHeader.setVisibility(type);
-        bioHeader.setVisibility(type);
-        changeBioHeader.setVisibility(type);
-        changePWHeader.setVisibility(type);
+                bundle.putString("bio", getBio);
+                fragment.setArguments(bundle);
 
-        bio.setVisibility(type);
-        changeBioField.setVisibility(type);
-        changePWFieldOld.setVisibility(type);
-        changePWFieldOldC.setVisibility(type);
-        changePWFieldNew.setVisibility(type);
-        changePWFieldNewC.setVisibility(type);
-
-        mRecyclerView.setVisibility(type);
-    }
-
-    private void dashResult(Response<String> response) {
-        String user_name;
-        String biog;
-
-        String count;
-        String fixed;
-
-        List<DashboardStat> stats = new ArrayList<>();;
-
-        String[] types = {"total_responses", "active_responses", "total_votes",
-                "active_votes", "total_discussions", "active_discussions"};
-
-        String result = String.valueOf(response.body());
-        String status = JsonPath.read(result, "$['status']");
-
-        if (status.compareTo("not_logged_in") == 0) {
-            Snackbar.make(view, "Not logged in!", Snackbar.LENGTH_SHORT).show();
-        } else {
-            user_name = JsonPath.read(result, "$['user'][0].user_name");
-            biog = JsonPath.read(result, "$['user'][0].bio");
-
-            for(String type: types) {
-                DashboardStat thing = new DashboardStat();
-
-                count = JsonPath.read(result, "$['user'][0]." + type).toString();
-                fixed = WordUtils.capitalize(type.replace("_", " ")) + ": ";
-
-                thing.setCount(count);
-                thing.setType(fixed);
-
-                stats.add(thing);
-            }
-
-            if(biog.length() == 0) {
-                biog = "[Empty]";
-            }
-
-            bio.setText(biog);
-            changeBioField.setText(biog);
-
-            dashboardStatsAdapter = new DashboardStatsAdapter(getContext(), stats);
-            mRecyclerView.setAdapter(dashboardStatsAdapter);
-
-            updateVisibility(View.VISIBLE);
-        }
-    }
-
-    private void postBioChange() {
-        apiService.changeBio(changeBioField.getText().toString()).enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                String snackMessage;
-
-                String result = String.valueOf(response.body());
-                String status = JsonPath.read(result, "$['status']");
-
-                if (status.compareTo("not_logged_in") == 0) {
-                    snackMessage = "Not logged in!";
-                } else if (status.compareTo("failure") == 0) {
-                    snackMessage = "Bio change failed!";
-                } else {
-                    snackMessage = "Bio changed!";
-                }
-
-                Snackbar.make(view, snackMessage, Snackbar.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-
+                Methods.addFragment(fragment, fm);
             }
         });
-    }
 
-    private void postPWChange() {
-        apiService.changePassword(changePWFieldOld.getText().toString(),
-                changePWFieldOldC.getText().toString(),
-                changePWFieldNew.getText().toString(),
-                changePWFieldNewC.getText().toString()).enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                String snackMessage;
+        changePasswordButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
 
-                String result = String.valueOf(response.body());
-                String status = JsonPath.read(result, "$['status']");
-
-                if (status.compareTo("not_logged_in") == 0) {
-                    snackMessage = "Not logged in!";
-                } else if (status.compareTo("failure") == 0) {
-                    snackMessage = "Password change failed!";
-                } else {
-                    snackMessage = "Password changed! Logged out.";
-                }
-
-                Snackbar.make(view, snackMessage, Snackbar.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-
+                Methods.addFragment(new ChangePasswordFragment(), fm);
             }
         });
     }
@@ -252,13 +114,72 @@ public class DashboardFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 dashResult(response);
+                Methods.setCookies(response, preferences);
+                progressBar.setVisibility(View.GONE);
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-
+                dashboardParent.setVisibility(View.GONE);
+                Methods.snackbar(view, getActivity(), "Failed to connect!");
+                progressBar.setVisibility(View.GONE);
             }
         });
+    }
+
+    private void dashResult(Response<String> response) {
+        String count;
+        String fixed;
+
+        List<DashboardStat> stats = new ArrayList<>();
+
+        String result = String.valueOf(response.body());
+        String status = JsonPath.read(result, "$['status']");
+
+        if (status.compareTo("not_logged_in") == 0) {
+            dashboardParent.setVisibility(View.GONE);
+            Methods.snackbar(view, getActivity(), "Not logged in!");
+            preferences.setLoginStatus(false);
+        } else {
+            final String userName = JsonPath.read(result, "$['user'][0].user_name");
+            final int userID = JsonPath.read(result, "$['user'][0].id");
+            getBio = JsonPath.read(result, "$['user'][0].bio");
+
+            for (String type : types) {
+                count = JsonPath.read(result, "$['user'][0]." + type).toString();
+                fixed = WordUtils.capitalize(type.replace("_", " "));
+
+                stats.add(new DashboardStat(fixed, count));
+
+                if (getBio.length() == 0) {
+                    getBio = "[Empty]";
+                }
+
+                bio.setText(getBio);
+            }
+
+            viewFullActivity.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    UserActivityFragment userActivityFragment = new UserActivityFragment();
+                    Bundle arguments = new Bundle();
+
+                    arguments.putString("header", "Full Activity");
+                    arguments.putString("request", "act");
+                    arguments.putString("userName", userName);
+                    arguments.putInt("userID", userID);
+
+                    userActivityFragment.setArguments(arguments);
+
+                    Methods.addFragment(userActivityFragment, fm);
+                }
+            });
+
+            dashboardStatsAdapter = new DashboardStatsAdapter(getContext(), stats, fm, userID,
+                    userName);
+
+            mRecyclerView.setAdapter(dashboardStatsAdapter);
+        }
     }
 
     public DashboardFragment() {
@@ -283,6 +204,7 @@ public class DashboardFragment extends Fragment {
 
         preferences = new Preferences(getActivity());
         apiService = APIClient.getClient(getActivity()).create(APIInterface.class);
+        fm = getFragmentManager();
     }
 
     @Override
@@ -292,7 +214,6 @@ public class DashboardFragment extends Fragment {
 
         initViews();
         initButtonListeners();
-        updateVisibility(View.GONE);
         getDashboard();
 
         return view;

@@ -16,10 +16,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import com.herokuapp.beevrr.beevrr.AdapterHelpers.Discussion;
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.UserActivity;
-import com.herokuapp.beevrr.beevrr.Adapters.DiscussionsAdapter;
 import com.herokuapp.beevrr.beevrr.Adapters.UserActivitiesAdapter;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
@@ -35,7 +34,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DiscussionsFragment extends Fragment {
+public class UserActivityFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -48,30 +47,37 @@ public class DiscussionsFragment extends Fragment {
     APIInterface apiService;
     View view;
 
+    private TextView activityHeaderText;
     private LinearLayout progressBar;
 
     private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter discussionsAdapter;
+    private RecyclerView.Adapter userActivitiesAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private List<Discussion> discussions = new ArrayList<>();
+    private String header;
+    private String request;
+    private String userName;
+    private int userID;
+
+    private List<UserActivity> userActivities = new ArrayList<>();
     private int page = 0;
 
     private void initViews() {
+        activityHeaderText = view.findViewById(R.id.activity_header_text);
         progressBar = view.findViewById(R.id.progress_bar);
 
-        mRecyclerView = view.findViewById(R.id.discussions_recycler);
+        mRecyclerView = view.findViewById(R.id.user_activity_recycler);
         mRecyclerView.setHasFixedSize(false);
 
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
     }
 
-    private void getDiscussions(int page) {
-        apiService.discussions(page).enqueue(new Callback<String>() {
+    private void getActivityRequest(int page) {
+        apiService.userInfo(userID, request, page).enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                discussionsResult(response);
+                activityResult(response);
                 Methods.setCookies(response, preferences);
                 progressBar.setVisibility(View.GONE);
             }
@@ -84,47 +90,32 @@ public class DiscussionsFragment extends Fragment {
         });
     }
 
-    private void discussionsResult(Response<String> response) {
-        List<Object> jsonDiscussions;
-
-        String userName;
+    private void activityResult(Response<String> response) {
+        List<Object> jsonActivities;
+        String action;
+        String opinion;
         String proposition;
-        String argument;
-        String currentPhase;
-        String time;
-
-        int userID;
-        int discussionID;
-        int replyCount;
-        int voteCount;
-        int score;
+        String date;
 
         String result = String.valueOf(response.body());
         String status = JsonPath.read(result, "$['status']");
 
         if (status.compareTo("success") == 0) {
-            jsonDiscussions = JsonPath.read(result, "$['discussions']");
+            jsonActivities = JsonPath.read(result, "$['activities']");
 
-            for (Object activity : jsonDiscussions) {
-                userName = JsonPath.read(activity, "$['user_name']").toString();
-                proposition = JsonPath.read(activity, "$['proposition']").toString();
-                argument = JsonPath.read(activity, "$['argument']").toString();
-                currentPhase = JsonPath.read(activity, "$['current_phase']").toString();
-                time = JsonPath.read(activity, "$['post_date']").toString();
-                userID = JsonPath.read(activity, "$['user_id']");
-                discussionID = JsonPath.read(activity, "$['id']");
-                replyCount = JsonPath.read(activity, "$['reply_count']");
-                voteCount = JsonPath.read(activity, "$['vote_count']");
-                score = JsonPath.read(activity, "$['score']");
+            for (Object activity : jsonActivities) {
+                action = JsonPath.read(activity, "$['thing']").toString();
+                opinion = JsonPath.read(activity, "$['type']").toString();
+                proposition = JsonPath.read(activity, "$['prop']").toString();
+                date = JsonPath.read(activity, "$['date']").toString();
 
-                discussions.add(new Discussion(userName, proposition, argument, currentPhase, time,
-                        userID, discussionID, replyCount, voteCount, score));
+                userActivities.add(new UserActivity(action, opinion, proposition, date));
             }
 
             if (page == 0) {
-                mRecyclerView.setAdapter(discussionsAdapter);
+                mRecyclerView.setAdapter(userActivitiesAdapter);
             } else {
-                discussionsAdapter.notifyDataSetChanged();
+                userActivitiesAdapter.notifyDataSetChanged();
             }
         } else if (status.compareTo("end_pagination") == 0) {
             page = -1;
@@ -133,11 +124,11 @@ public class DiscussionsFragment extends Fragment {
         }
     }
 
-    public DiscussionsFragment() {
+    public UserActivityFragment() {
     }
 
-    public static DiscussionsFragment newInstance(String param1, String param2) {
-        DiscussionsFragment fragment = new DiscussionsFragment();
+    public static UserActivityFragment newInstance(String param1, String param2) {
+        UserActivityFragment fragment = new UserActivityFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -153,19 +144,28 @@ public class DiscussionsFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
+        Bundle arguments = getArguments();
+
         preferences = new Preferences(getActivity());
         apiService = APIClient.getClient(getActivity()).create(APIInterface.class);
 
-        discussionsAdapter = new DiscussionsAdapter(getContext(), discussions);
+        header = arguments.getString("header");
+        request = arguments.getString("request");
+        userName = arguments.getString("userName");
+        userID = arguments.getInt("userID");
+
+        userActivitiesAdapter = new UserActivitiesAdapter(getContext(), userActivities);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_discussions, container, false);
+        view = inflater.inflate(R.layout.fragment_user_activity, container, false);
 
         initViews();
-        getDiscussions(0);
+        getActivityRequest(0);
+
+        activityHeaderText.setText(userName + "'s " + header);
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -173,7 +173,7 @@ public class DiscussionsFragment extends Fragment {
                 super.onScrollStateChanged(recyclerView, newState);
 
                 if (!recyclerView.canScrollVertically(1) && page != -1) {
-                    getDiscussions(++page);
+                    getActivityRequest(++page);
                 }
             }
         });

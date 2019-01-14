@@ -11,11 +11,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.Methods;
@@ -29,7 +31,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LoginFragment extends Fragment {
+public class ChangePasswordFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -42,30 +44,49 @@ public class LoginFragment extends Fragment {
     APIInterface apiService;
     View view;
 
-    Button login;
-    TextView viewUsername;
-    TextView viewPassword;
+    private TextView changePWFieldOld;
+    private TextView changePWFieldOldC;
+    private TextView changePWFieldNew;
+    private TextView changePWFieldNewC;
+    private Button changePWSubmit;
+
+    public ChangePasswordFragment() {
+
+    }
+
+    public static ChangePasswordFragment newInstance(String param1, String param2) {
+        ChangePasswordFragment fragment = new ChangePasswordFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM2, param2);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     private void initViews() {
-        login = view.findViewById(R.id.login);
-        viewUsername = view.findViewById(R.id.username);
-        viewPassword = view.findViewById(R.id.password);
+        changePWFieldOld = view.findViewById(R.id.new_password);
+        changePWFieldOldC = view.findViewById(R.id.confirm_new_password);
+        changePWFieldNew = view.findViewById(R.id.old_password);
+        changePWFieldNewC = view.findViewById(R.id.confirm_old_password);
+        changePWSubmit = view.findViewById(R.id.change_pw_submit);
     }
 
     private void initButtonListeners() {
-        login.setOnClickListener(new View.OnClickListener() {
+        changePWSubmit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                login();
-                login.onEditorAction(EditorInfo.IME_ACTION_DONE);
+                postPWChange();
+                changePWSubmit.onEditorAction(EditorInfo.IME_ACTION_DONE);
             }
         });
     }
 
-    private void login() {
-        String user = viewUsername.getText().toString();
-        String pw = viewPassword.getText().toString();
+    private void postPWChange() {
+        String oldPW = changePWFieldOld.getText().toString();
+        String oldPWC = changePWFieldOldC.getText().toString();
+        String newPW = changePWFieldNew.getText().toString();
+        String newPWC = changePWFieldNewC.getText().toString();
 
-        apiService.login(user, pw).enqueue(new Callback<String>() {
+        apiService.changePassword(oldPW, oldPWC, newPW, newPWC).enqueue(new Callback<String>() {
             String snackMessage;
             String result;
             String status;
@@ -75,12 +96,13 @@ public class LoginFragment extends Fragment {
                 result = String.valueOf(response.body());
                 status = JsonPath.read(result, "$['status']");
 
-                if (status.compareTo("failure") > 0) {
-                    snackMessage = "Logged in!";
-                    preferences.setLoginStatus(true);
-                } else {
-                    snackMessage = "Login failed!";
+                if (status.compareTo("not_logged_in") == 0) {
+                    snackMessage = "Not logged in!";
                     preferences.setLoginStatus(false);
+                } else if (status.compareTo("failure") == 0) {
+                    snackMessage = "Password change failed!";
+                } else {
+                    snackMessage = "Password changed! Logged out.";
                 }
 
                 Methods.setCookies(response, preferences);
@@ -92,18 +114,6 @@ public class LoginFragment extends Fragment {
                 Methods.snackbar(view, getActivity(), "Failed to connect!");
             }
         });
-    }
-
-    public LoginFragment() {
-    }
-
-    public static LoginFragment newInstance(String param1, String param2) {
-        LoginFragment fragment = new LoginFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
     }
 
     @Override
@@ -121,7 +131,7 @@ public class LoginFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_login, container, false);
+        view = inflater.inflate(R.layout.fragment_change_password, container, false);
 
         initViews();
         initButtonListeners();

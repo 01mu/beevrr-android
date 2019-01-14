@@ -19,7 +19,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class APIClient implements Serializable {
-    private static final String BASE_URL = "https://beevrr.herokuapp.com/";
+    private static final String BASE_URL = "https://beevrr.herokuapp.com/mobile/";
 
     private static Retrofit retrofit = null;
 

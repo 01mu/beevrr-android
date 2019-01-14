@@ -1,15 +1,25 @@
+/*
+    beevrr-android
+    github.com/01mu
+ */
+
 package com.herokuapp.beevrr.beevrr.AdapterHelpers;
 
 public class DashboardStat {
-    private String type;
+    private String header;
     private String count;
 
-    public String getType() {
-        return type;
+    public DashboardStat(String header, String count) {
+        this.header = header;
+        this.count = count;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public String getHeader() {
+        return header;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
     }
 
     public String getCount() {

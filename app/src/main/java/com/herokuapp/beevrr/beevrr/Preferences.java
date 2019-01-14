@@ -1,3 +1,8 @@
+/*
+    beevrr-android
+    github.com/01mu
+ */
+
 package com.herokuapp.beevrr.beevrr;
 
 import android.app.Activity;

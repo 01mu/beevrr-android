@@ -18,6 +18,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
 import com.herokuapp.beevrr.beevrr.Retrofit.APIClient;
@@ -44,34 +45,52 @@ public class RegisterFragment extends Fragment {
     EditText userName;
     EditText password;
     EditText passwordConfirm;
-
     Button register;
 
-    private void registerUser() {
-        final String newUser = userName.getText().toString();
+    private void initViews() {
+        userName = view.findViewById(R.id.username);
+        password = view.findViewById(R.id.password);
+        passwordConfirm = view.findViewById(R.id.password_confirm);
+        register = view.findViewById(R.id.register);
+    }
 
-        apiService.register(newUser,
-                password.getText().toString(),
-                passwordConfirm.getText().toString()).enqueue(new Callback<String>() {
+    private void initButtonListeners() {
+        register.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                registerUser();
+                register.onEditorAction(EditorInfo.IME_ACTION_DONE);
+            }
+        });
+    }
+
+    private void registerUser() {
+        final String user = userName.getText().toString();
+        String pw = password.getText().toString();
+        String pwC = passwordConfirm.getText().toString();
+
+        apiService.register(user, pw, pwC).enqueue(new Callback<String>() {
+            String snackMessage;
+            String result;
+            String status;
+
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                String snackMessage;
-
-                String result = String.valueOf(response.body());
-                String status = JsonPath.read(result, "$['status']");
+                result = String.valueOf(response.body());
+                status = JsonPath.read(result, "$['status']");
 
                 if (status.compareTo("failure") == 0) {
                     snackMessage = "Registration failed!";
                 } else {
-                    snackMessage = newUser + " registered!";
+                    snackMessage = user + " registered!";
                 }
 
-                Snackbar.make(view, snackMessage, Snackbar.LENGTH_SHORT).show();
+                Methods.setCookies(response, preferences);
+                Methods.snackbar(view, getActivity(), snackMessage);
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-
+                Methods.snackbar(view, getActivity(), "Failed to connect!");
             }
         });
     }
@@ -105,19 +124,8 @@ public class RegisterFragment extends Fragment {
                              Bundle savedInstanceState) {
         view =  inflater.inflate(R.layout.fragment_register, container, false);
 
-        userName = view.findViewById(R.id.username);
-        password = view.findViewById(R.id.password);
-        passwordConfirm = view.findViewById(R.id.password_confirm);
-
-        register = view.findViewById(R.id.register);
-
-        register.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                registerUser();
-
-                register.onEditorAction(EditorInfo.IME_ACTION_DONE);
-            }
-        });
+        initViews();
+        initButtonListeners();
 
         return view;
     }
