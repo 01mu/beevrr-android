@@ -16,16 +16,19 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 
-import com.herokuapp.beevrr.beevrr.Fragments.ChangeBioFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.ChangePasswordFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.DashboardFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.DiscussionsFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.LoginFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.LogoutFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.RegisterFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.UserActivityFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.ChangeBioFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.ChangePasswordFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.DashboardFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.AddDiscussionFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionsFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Auth.LoginFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Auth.LogoutFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Auth.RegisterFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.ViewDiscussionFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.User.UserActivityFragment;
 
 import static com.herokuapp.beevrr.beevrr.R.drawable.ic_menu_black_24dp;
 
@@ -37,7 +40,9 @@ public class MainActivity extends AppCompatActivity implements
         RegisterFragment.OnFragmentInteractionListener,
         ChangeBioFragment.OnFragmentInteractionListener,
         ChangePasswordFragment.OnFragmentInteractionListener,
-        UserActivityFragment.OnFragmentInteractionListener {
+        UserActivityFragment.OnFragmentInteractionListener,
+        ViewDiscussionFragment.OnFragmentInteractionListener,
+        AddDiscussionFragment.OnFragmentInteractionListener {
     FragmentManager fm;
 
     private NavigationView navigationView;
@@ -61,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        toolbar.setTitle("Discussions");
+
         ActionBar actionBar = getSupportActionBar();
 
         if (actionBar != null) {
@@ -71,6 +78,13 @@ public class MainActivity extends AppCompatActivity implements
         navigationView = findViewById(R.id.nav_view);
         mDrawerLayout = findViewById(R.id.drawer_layout);
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_empty, menu);
+        return true;
+    }
+
 
     private void setNavigationSelector() {
         navigationView.setNavigationItemSelectedListener(

@@ -3,14 +3,15 @@
     github.com/01mu
  */
 
-package com.herokuapp.beevrr.beevrr.Fragments;
+package com.herokuapp.beevrr.beevrr.Fragments.Auth;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,9 +39,11 @@ public class LoginFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
+    Activity activity;
     Preferences preferences;
     APIInterface apiService;
     View view;
+    Toolbar toolbar;
 
     Button login;
     TextView viewUsername;
@@ -55,13 +58,13 @@ public class LoginFragment extends Fragment {
     private void initButtonListeners() {
         login.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                login();
+                postLogin();
                 login.onEditorAction(EditorInfo.IME_ACTION_DONE);
             }
         });
     }
 
-    private void login() {
+    private void postLogin() {
         String user = viewUsername.getText().toString();
         String pw = viewPassword.getText().toString();
 
@@ -113,9 +116,6 @@ public class LoginFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-
-        preferences = new Preferences(getActivity());
-        apiService = APIClient.getClient(getActivity()).create(APIInterface.class);
     }
 
     @Override
@@ -144,6 +144,11 @@ public class LoginFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+
+        activity = getActivity();
+        preferences = new Preferences(activity);
+        apiService = APIClient.getClient(activity).create(APIInterface.class);
+        Methods.setToolbarTitle(activity, toolbar, "Login");
     }
 
     @Override

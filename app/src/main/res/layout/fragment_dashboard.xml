@@ -11,7 +11,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:id="@+id/dashboard_parent"
-    tools:context=".Fragments.DashboardFragment">
+    tools:context=".Fragments.Dashboard.DashboardFragment">
 
     <LinearLayout
         android:id="@+id/progress_bar"

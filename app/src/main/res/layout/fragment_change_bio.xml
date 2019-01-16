@@ -11,7 +11,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#fafafa"
-    tools:context=".Fragments.ChangeBioFragment">
+    tools:context=".Fragments.Dashboard.ChangeBioFragment">
 
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -21,26 +21,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
-
-            <LinearLayout
-                android:id="@+id/change_bio_header"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_gravity="center"
-                android:background="#e6e6e6"
-                android:baselineAligned="false"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="Change Bio"
-                    android:textSize="22sp" />
-
-            </LinearLayout>
 
             <android.support.v7.widget.CardView
                 android:id="@+id/change_bio_card"

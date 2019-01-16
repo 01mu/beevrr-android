@@ -5,14 +5,17 @@
 
 package com.herokuapp.beevrr.beevrr.Fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
 import com.herokuapp.beevrr.beevrr.Retrofit.APIClient;
@@ -27,9 +30,11 @@ public class TemplateFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
+    Activity activity;
     Preferences preferences;
     APIInterface apiService;
     View view;
+    Toolbar toolbar;
 
     public TemplateFragment() {
     }
@@ -78,6 +83,11 @@ public class TemplateFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+
+        activity = getActivity();
+        preferences = new Preferences(activity);
+        apiService = APIClient.getClient(activity).create(APIInterface.class);
+        Methods.setToolbarTitle(activity, toolbar, "Beevrr");
     }
 
     @Override

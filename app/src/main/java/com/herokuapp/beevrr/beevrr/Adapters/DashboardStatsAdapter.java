@@ -6,12 +6,9 @@
 package com.herokuapp.beevrr.beevrr.Adapters;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,8 +17,7 @@ import android.view.animation.Animation;
 import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.DashboardStat;
-import com.herokuapp.beevrr.beevrr.Fragments.DiscussionsFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.UserActivityFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.User.UserActivityFragment;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.R;
 

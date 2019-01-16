@@ -6,15 +6,23 @@
 package com.herokuapp.beevrr.beevrr.Adapters;
 
 import android.content.Context;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.DashboardStat;
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.Discussion;
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.UserActivity;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.ViewDiscussionFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.User.UserActivityFragment;
+import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.R;
 
 import org.w3c.dom.Text;
@@ -26,10 +34,16 @@ public class DiscussionsAdapter
 
     private Context mCtx;
     private List<Discussion> discussions;
+    private FragmentManager fm;
 
-    public DiscussionsAdapter(Context mCtx, List<Discussion> discussions) {
+    private Animation animation = new AlphaAnimation(0.3f, 1.0f);
+    private Bundle arguments = new Bundle();
+    private ViewDiscussionFragment viewDiscussionFragment =  new ViewDiscussionFragment();
+
+    public DiscussionsAdapter(Context mCtx, List<Discussion> discussions, FragmentManager fm) {
         this.mCtx = mCtx;
         this.discussions = discussions;
+        this.fm = fm;
     }
 
     @Override
@@ -49,6 +63,8 @@ public class DiscussionsAdapter
         holder.time.setText(" " + discussion.getTime());
         holder.score.setText(" | " + Integer.toString(discussion.getScore()) + " likes");
         holder.currentPhase.setText(" | " + discussion.getCurrentPhase());
+
+        holder.discussionToView = discussion;
     }
 
     @Override
@@ -63,7 +79,9 @@ public class DiscussionsAdapter
         TextView score;
         TextView currentPhase;
 
-        public ProductViewHolder(View itemView) {
+        Discussion discussionToView;
+
+        public ProductViewHolder(final View itemView) {
             super(itemView);
 
             proposition = itemView.findViewById(R.id.proposition);
@@ -71,6 +89,19 @@ public class DiscussionsAdapter
             time = itemView.findViewById(R.id.time);
             score = itemView.findViewById(R.id.score);
             currentPhase = itemView.findViewById(R.id.current_phase);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    itemView.startAnimation(animation);
+
+                    arguments.putSerializable("discussion", discussionToView);
+
+                    viewDiscussionFragment.setArguments(arguments);
+
+                    Methods.addFragment(viewDiscussionFragment, fm);
+                }
+            });
         }
     }
 }

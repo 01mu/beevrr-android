@@ -3,29 +3,29 @@
     github.com/01mu
  */
 
-package com.herokuapp.beevrr.beevrr.Fragments;
+package com.herokuapp.beevrr.beevrr.Fragments.Dashboard;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.DashboardStat;
 import com.herokuapp.beevrr.beevrr.Adapters.DashboardStatsAdapter;
+import com.herokuapp.beevrr.beevrr.Fragments.User.UserActivityFragment;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
@@ -51,9 +51,11 @@ public class DashboardFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
+    Activity activity;
     Preferences preferences;
     APIInterface apiService;
     View view;
+    Toolbar toolbar;
 
     private LinearLayout dashboardParent;
     private TextView bio;
@@ -141,8 +143,8 @@ public class DashboardFragment extends Fragment {
             Methods.snackbar(view, getActivity(), "Not logged in!");
             preferences.setLoginStatus(false);
         } else {
-            final String userName = JsonPath.read(result, "$['user'][0].user_name");
-            final int userID = JsonPath.read(result, "$['user'][0].id");
+            final String name = JsonPath.read(result, "$['user'][0].user_name");
+            final int id = JsonPath.read(result, "$['user'][0].id");
             getBio = JsonPath.read(result, "$['user'][0].bio");
 
             for (String type : types) {
@@ -158,28 +160,30 @@ public class DashboardFragment extends Fragment {
                 bio.setText(getBio);
             }
 
-            viewFullActivity.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    UserActivityFragment userActivityFragment = new UserActivityFragment();
-                    Bundle arguments = new Bundle();
+            setFullActivityListener(id, name);
 
-                    arguments.putString("header", "Full Activity");
-                    arguments.putString("request", "act");
-                    arguments.putString("userName", userName);
-                    arguments.putInt("userID", userID);
-
-                    userActivityFragment.setArguments(arguments);
-
-                    Methods.addFragment(userActivityFragment, fm);
-                }
-            });
-
-            dashboardStatsAdapter = new DashboardStatsAdapter(getContext(), stats, fm, userID,
-                    userName);
-
+            dashboardStatsAdapter = new DashboardStatsAdapter(getContext(), stats, fm, id, name);
             mRecyclerView.setAdapter(dashboardStatsAdapter);
         }
+    }
+
+    private void setFullActivityListener(final int userID, final String userName) {
+        viewFullActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                UserActivityFragment userActivityFragment = new UserActivityFragment();
+                Bundle arguments = new Bundle();
+
+                arguments.putString("header", "Full Activity");
+                arguments.putString("request", "act");
+                arguments.putString("userName", userName);
+                arguments.putInt("userID", userID);
+
+                userActivityFragment.setArguments(arguments);
+
+                Methods.addFragment(userActivityFragment, fm);
+            }
+        });
     }
 
     public DashboardFragment() {
@@ -201,10 +205,6 @@ public class DashboardFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-
-        preferences = new Preferences(getActivity());
-        apiService = APIClient.getClient(getActivity()).create(APIInterface.class);
-        fm = getFragmentManager();
     }
 
     @Override
@@ -234,6 +234,12 @@ public class DashboardFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+
+        activity = getActivity();
+        preferences = new Preferences(activity);
+        apiService = APIClient.getClient(activity).create(APIInterface.class);
+        Methods.setToolbarTitle(activity, toolbar, "Dashboard");
+        fm = getFragmentManager();
     }
 
     @Override

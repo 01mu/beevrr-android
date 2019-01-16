@@ -1,6 +1,9 @@
 package com.herokuapp.beevrr.beevrr.AdapterHelpers;
 
-public class Discussion {
+import java.io.Serializable;
+import java.util.HashMap;
+
+public class Discussion implements Serializable {
     private String userName;
     private String proposition;
     private String argument;
@@ -9,13 +12,17 @@ public class Discussion {
 
     private int userID;
     private int discussionID;
+
     private int replyCount;
     private int voteCount;
     private int score;
 
+    private HashMap<String, String> voteCounts;
+    private String winner;
+
     public Discussion(String userName, String proposition, String argument, String currentPhase,
                       String time, int userID, int discussionID, int replyCount, int voteCount,
-                      int score) {
+                      int score, HashMap<String, String> voteCounts, String winner) {
         this.userName = userName;
         this.proposition = proposition;
         this.argument = argument;
@@ -26,6 +33,8 @@ public class Discussion {
         this.replyCount = replyCount;
         this.voteCount = voteCount;
         this.score = score;
+        this.voteCounts = voteCounts;
+        this.winner = winner;
     }
 
     public String getUserName() {
@@ -106,5 +115,21 @@ public class Discussion {
 
     public void setScore(int score) {
         this.score = score;
+    }
+
+    public HashMap<String, String> getVoteCounts() {
+        return voteCounts;
+    }
+
+    public void setVoteCounts(HashMap<String, String> voteCounts) {
+        this.voteCounts = voteCounts;
+    }
+
+    public void setWinner(String winner) {
+        this.winner = winner;
+    }
+
+    public String getWinner() {
+        return winner;
     }
 }

@@ -48,4 +48,18 @@ public interface APIInterface {
 
     @GET("home/p/{p}")
     Call<String> discussions(@Path(value = "p", encoded = true) int page);
+
+    @GET("discussion_view/{id}")
+    Call<String> discussionView(@Path(value = "id", encoded = true) int id);
+
+    @GET("check")
+    Call<String> checkLoggedIn();
+
+    @FormUrlEncoded
+    @POST("disc_submit")
+    Call<String> submitDiscussion(@Field("prop") String proposition,
+                                  @Field("arg") String argument,
+                                  @Field("pa") String pa,
+                                  @Field("a") String a,
+                                  @Field("v") String v);
 }
