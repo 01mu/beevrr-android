@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +18,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionsFragment;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
@@ -39,16 +39,15 @@ public class RegisterFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    Activity activity;
-    Preferences preferences;
-    APIInterface apiService;
-    View view;
-    Toolbar toolbar;
+    private Activity activity;
+    private Preferences preferences;
+    private APIInterface apiService;
+    private View view;
 
-    EditText userName;
-    EditText password;
-    EditText passwordConfirm;
-    Button register;
+    private EditText userName;
+    private EditText password;
+    private EditText passwordConfirm;
+    private Button register;
 
     private void initViews() {
         userName = view.findViewById(R.id.username);
@@ -68,27 +67,29 @@ public class RegisterFragment extends Fragment {
 
     private void postRegister() {
         final String user = userName.getText().toString();
-        String pw = password.getText().toString();
-        String pwC = passwordConfirm.getText().toString();
 
-        apiService.register(user, pw, pwC).enqueue(new Callback<String>() {
-            String snackMessage;
-            String result;
-            String status;
-
+        apiService.register(user, password.getText().toString(),
+                passwordConfirm.getText().toString()).enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                result = String.valueOf(response.body());
-                status = JsonPath.read(result, "$['status']");
+                String result = String.valueOf(response.body());
+                String snackMessage;
 
-                if (status.compareTo("failure") == 0) {
-                    snackMessage = "Registration failed!";
-                } else {
-                    snackMessage = user + " registered!";
+                try {
+                    String status = JsonPath.read(result, "$['status']");
+
+                    if (status.compareTo("success") == 0) {
+                        snackMessage = user + " registered!";
+                        Methods.setFragment(new DiscussionsFragment(), getFragmentManager());
+                    } else {
+                        snackMessage = "Registration failed!";
+                    }
+                } catch (Exception e) {
+                    snackMessage = "Please wait before attempting to register!";
                 }
 
-                Methods.setCookies(response, preferences);
                 Methods.snackbar(view, getActivity(), snackMessage);
+                Methods.setCookies(response, preferences);
             }
 
             @Override
@@ -152,7 +153,8 @@ public class RegisterFragment extends Fragment {
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
-        Methods.setToolbarTitle(activity, toolbar, "Register");
+
+        Methods.setToolbarTitle(activity, "Register");
     }
 
     @Override

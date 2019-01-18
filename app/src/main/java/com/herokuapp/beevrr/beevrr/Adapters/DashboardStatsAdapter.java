@@ -17,7 +17,7 @@ import android.view.animation.Animation;
 import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.DashboardStat;
-import com.herokuapp.beevrr.beevrr.Fragments.User.UserActivityFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.UserActivityFragment;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.R;
 

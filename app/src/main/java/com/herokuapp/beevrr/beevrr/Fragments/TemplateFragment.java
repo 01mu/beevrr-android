@@ -87,7 +87,7 @@ public class TemplateFragment extends Fragment {
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
-        Methods.setToolbarTitle(activity, toolbar, "Beevrr");
+        Methods.setToolbarTitle(activity, "Beevrr");
     }
 
     @Override

@@ -7,7 +7,6 @@ package com.herokuapp.beevrr.beevrr.Adapters;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -17,15 +16,10 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.TextView;
 
-import com.herokuapp.beevrr.beevrr.AdapterHelpers.DashboardStat;
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.Discussion;
-import com.herokuapp.beevrr.beevrr.AdapterHelpers.UserActivity;
-import com.herokuapp.beevrr.beevrr.Fragments.Discussion.ViewDiscussionFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.User.UserActivityFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionViewFragment;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.R;
-
-import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -38,7 +32,7 @@ public class DiscussionsAdapter
 
     private Animation animation = new AlphaAnimation(0.3f, 1.0f);
     private Bundle arguments = new Bundle();
-    private ViewDiscussionFragment viewDiscussionFragment =  new ViewDiscussionFragment();
+    private DiscussionViewFragment discussionViewFragment = new DiscussionViewFragment();
 
     public DiscussionsAdapter(Context mCtx, List<Discussion> discussions, FragmentManager fm) {
         this.mCtx = mCtx;
@@ -97,9 +91,9 @@ public class DiscussionsAdapter
 
                     arguments.putSerializable("discussion", discussionToView);
 
-                    viewDiscussionFragment.setArguments(arguments);
+                    discussionViewFragment.setArguments(arguments);
 
-                    Methods.addFragment(viewDiscussionFragment, fm);
+                    Methods.addFragment(discussionViewFragment, fm);
                 }
             });
         }

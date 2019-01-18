@@ -15,7 +15,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +24,6 @@ import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.DashboardStat;
 import com.herokuapp.beevrr.beevrr.Adapters.DashboardStatsAdapter;
-import com.herokuapp.beevrr.beevrr.Fragments.User.UserActivityFragment;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
@@ -51,11 +49,11 @@ public class DashboardFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    Activity activity;
-    Preferences preferences;
-    APIInterface apiService;
-    View view;
-    Toolbar toolbar;
+    private Activity activity;
+    private Preferences preferences;
+    private APIInterface apiService;
+    private View view;
+    private FragmentManager fm;
 
     private LinearLayout dashboardParent;
     private TextView bio;
@@ -68,9 +66,7 @@ public class DashboardFragment extends Fragment {
     private RecyclerView.Adapter dashboardStatsAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private FragmentManager fm;
     private String getBio;
-
     private String[] types = {"total_responses", "active_responses", "total_votes",
             "active_votes", "total_discussions", "active_discussions"};
 
@@ -130,35 +126,30 @@ public class DashboardFragment extends Fragment {
     }
 
     private void dashResult(Response<String> response) {
-        String count;
-        String fixed;
-
-        List<DashboardStat> stats = new ArrayList<>();
-
         String result = String.valueOf(response.body());
         String status = JsonPath.read(result, "$['status']");
+
+        String fixed;
+        String count;
+
+        List<DashboardStat> stats = new ArrayList<>();
 
         if (status.compareTo("not_logged_in") == 0) {
             dashboardParent.setVisibility(View.GONE);
             Methods.snackbar(view, getActivity(), "Not logged in!");
-            preferences.setLoginStatus(false);
         } else {
             final String name = JsonPath.read(result, "$['user'][0].user_name");
             final int id = JsonPath.read(result, "$['user'][0].id");
             getBio = JsonPath.read(result, "$['user'][0].bio");
 
             for (String type : types) {
-                count = JsonPath.read(result, "$['user'][0]." + type).toString();
                 fixed = WordUtils.capitalize(type.replace("_", " "));
+                count = JsonPath.read(result, "$['user'][0]." + type).toString();
 
                 stats.add(new DashboardStat(fixed, count));
-
-                if (getBio.length() == 0) {
-                    getBio = "[Empty]";
-                }
-
-                bio.setText(getBio);
             }
+
+            bio.setText(getBio);
 
             setFullActivityListener(id, name);
 
@@ -238,8 +229,9 @@ public class DashboardFragment extends Fragment {
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
-        Methods.setToolbarTitle(activity, toolbar, "Dashboard");
         fm = getFragmentManager();
+
+        Methods.setToolbarTitle(activity, "Dashboard");
     }
 
     @Override

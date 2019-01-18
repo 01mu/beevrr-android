@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,28 +38,15 @@ public class ChangeBioFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    Activity activity;
-    Preferences preferences;
-    APIInterface apiService;
-    View view;
-    Toolbar toolbar;
+    private Activity activity;
+    private Preferences preferences;
+    private APIInterface apiService;
+    private View view;
 
     private TextView changeBioField;
     private Button changeBioSubmit;
 
     private String getBio;
-
-    public ChangeBioFragment() {
-    }
-
-    public static ChangeBioFragment newInstance(String param1, String param2) {
-        ChangeBioFragment fragment = new ChangeBioFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     private void initViews() {
         changeBioField = view.findViewById(R.id.change_bio_field);
@@ -77,21 +63,15 @@ public class ChangeBioFragment extends Fragment {
     }
 
     private void postBioChange() {
-        String newBio = changeBioField.getText().toString();
-
-        apiService.changeBio(newBio).enqueue(new Callback<String>() {
-            String snackMessage;
-            String result;
-            String status;
-
+        apiService.changeBio(changeBioField.getText().toString()).enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                result = String.valueOf(response.body());
-                status = JsonPath.read(result, "$['status']");
+                String result = String.valueOf(response.body());
+                String status = JsonPath.read(result, "$['status']");
+                String snackMessage;
 
                 if (status.compareTo("not_logged_in") == 0) {
                     snackMessage = "Not logged in!";
-                    preferences.setLoginStatus(false);
                 } else if (status.compareTo("failure") == 0) {
                     snackMessage = "Bio change failed!";
                 } else {
@@ -107,6 +87,18 @@ public class ChangeBioFragment extends Fragment {
                 Methods.snackbar(view, getActivity(), "Failed to connect!");
             }
         });
+    }
+
+    public ChangeBioFragment() {
+    }
+
+    public static ChangeBioFragment newInstance(String param1, String param2) {
+        ChangeBioFragment fragment = new ChangeBioFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM2, param2);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
@@ -150,7 +142,7 @@ public class ChangeBioFragment extends Fragment {
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
-        //Methods.setToolbarTitle(activity, toolbar, "Change Bio");
+
         getBio = getArguments().getString("bio");
     }
 

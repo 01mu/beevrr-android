@@ -10,7 +10,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".Fragments.Discussion.DiscussionsFragment">
+    android:background="#fafafa"
+    tools:context=".Fragments.Discussion.DiscussionResponsesFragment">
 
     <LinearLayout
         android:id="@+id/progress_bar"
@@ -29,10 +30,10 @@
     </LinearLayout>
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/discussions_recycler"
+        android:id="@+id/respones_recycler"
         android:layout_width="match_parent"
-        android:layout_marginTop="11dp"
-        android:layout_marginBottom="11dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:layout_height="wrap_content"
         android:scrollbars="vertical" />
 

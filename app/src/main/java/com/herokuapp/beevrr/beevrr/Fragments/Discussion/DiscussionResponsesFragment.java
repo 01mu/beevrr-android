@@ -11,19 +11,19 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.Discussion;
+import com.herokuapp.beevrr.beevrr.AdapterHelpers.DiscussionResponse;
 import com.herokuapp.beevrr.beevrr.Adapters.DiscussionsAdapter;
+import com.herokuapp.beevrr.beevrr.Adapters.ResponsesAdapter;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
@@ -39,7 +39,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DiscussionsFragment extends Fragment {
+public class DiscussionResponsesFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -52,35 +52,33 @@ public class DiscussionsFragment extends Fragment {
     private Preferences preferences;
     private APIInterface apiService;
     private View view;
-    private FragmentManager fm;
 
     private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter discussionsAdapter;
+    private RecyclerView.Adapter responseAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
     private LinearLayout progressBar;
 
-    private List<Discussion> discussions = new ArrayList<>();
+    private String responseType;
+    private int discussionID;
+    private List<DiscussionResponse> responses = new ArrayList<>();
     private int page = 0;
-    final String[] types = {"pa_for", "pa_against", "pa_undecided", "pv_for", "pv_against",
-            "pa_for_per", "pa_against_per", "pa_undecided_per", "pv_for_per", "pv_against_per",
-            "for_change", "against_change"};
 
     private void initViews() {
         progressBar = view.findViewById(R.id.progress_bar);
 
-        mRecyclerView = view.findViewById(R.id.discussions_recycler);
+        mRecyclerView = view.findViewById(R.id.respones_recycler);
         mRecyclerView.setHasFixedSize(false);
 
         mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
     }
 
-    private void getDiscussions(int page) {
-        apiService.discussions(page).enqueue(new Callback<String>() {
+    private void getResponses(int page) {
+        apiService.getResponses(responseType, discussionID, page).enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                discussionsResult(response);
+                responsesResult(response);
                 Methods.setCookies(response, preferences);
                 progressBar.setVisibility(View.GONE);
             }
@@ -93,59 +91,46 @@ public class DiscussionsFragment extends Fragment {
         });
     }
 
-    private void discussionsResult(Response<String> response) {
+    private void responsesResult(Response<String> response) {
         String result = String.valueOf(response.body());
         String status = JsonPath.read(result, "$['status']");
 
-        List<Object> jsonDiscussions;
-        HashMap<String, String> voteCounts = new HashMap<>();
+        List<Object> jsonResponses;
 
+        int id;
+
+        String discussionResponse;
         String userName;
-        String proposition;
-        String argument;
-        String currentPhase;
+        String opinion;
         String time;
-        String winner;
 
+        int proposition;
         int userID;
-        int discussionID;
-        int replyCount;
-        int voteCount;
         int score;
 
         if (status.compareTo("success") == 0) {
-            jsonDiscussions = JsonPath.read(result, "$['discussions']");
+            jsonResponses = JsonPath.read(result, "$['responses']");
 
-            for (Object disc : jsonDiscussions) {
+            for (Object disc : jsonResponses) {
+                id = JsonPath.read(disc, "$['id']");
+
+                discussionResponse = JsonPath.read(disc, "$['response']").toString();
                 userName = JsonPath.read(disc, "$['user_name']").toString();
-                proposition = JsonPath.read(disc, "$['proposition']").toString();
-                argument = JsonPath.read(disc, "$['argument']").toString();
-                currentPhase = JsonPath.read(disc, "$['current_phase']").toString();
-                time = JsonPath.read(disc, "$['post_date']").toString();
+                opinion = JsonPath.read(disc, "$['opinion']").toString();
+                time = JsonPath.read(disc, "$['date']").toString();
+
+                proposition = JsonPath.read(disc, "$['proposition']");
                 userID = JsonPath.read(disc, "$['user_id']");
-                discussionID = JsonPath.read(disc, "$['id']");
-                replyCount = JsonPath.read(disc, "$['reply_count']");
-                voteCount = JsonPath.read(disc, "$['vote_count']");
                 score = JsonPath.read(disc, "$['score']");
-                winner = JsonPath.read(disc, "$['winner']");
 
-                for (String type : types) {
-                    voteCounts.put(type, JsonPath.read(disc, "$['" + type + "']")
-                            .toString());
-                }
-
-                discussions.add(new Discussion(userName, proposition, argument, currentPhase, time,
-                        userID, discussionID, replyCount, voteCount, score, voteCounts, winner));
+                responses.add(new DiscussionResponse(id, discussionResponse, userName, opinion,
+                        time, proposition, userID, score));
             }
 
             if (page == 0) {
-                if (JsonPath.read(result, "$['logged_in']")) {
-                    setHasOptionsMenu(true);
-                }
-
-                mRecyclerView.setAdapter(discussionsAdapter);
+                mRecyclerView.setAdapter(responseAdapter);
             } else {
-                discussionsAdapter.notifyDataSetChanged();
+                responseAdapter.notifyDataSetChanged();
             }
         } else if (status.compareTo("end_pagination") == 0) {
             page = -1;
@@ -154,11 +139,11 @@ public class DiscussionsFragment extends Fragment {
         }
     }
 
-    public DiscussionsFragment() {
+    public DiscussionResponsesFragment() {
     }
 
-    public static DiscussionsFragment newInstance(String param1, String param2) {
-        DiscussionsFragment fragment = new DiscussionsFragment();
+    public static DiscussionResponsesFragment newInstance(String param1, String param2) {
+        DiscussionResponsesFragment fragment = new DiscussionResponsesFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -173,15 +158,24 @@ public class DiscussionsFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+        preferences = new Preferences(getActivity());
+        apiService = APIClient.getClient(getActivity()).create(APIInterface.class);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_discussions, container, false);
+        view = inflater.inflate(R.layout.fragment_discussion_responses, container,
+                false);
+
+        setHasOptionsMenu(true);
+
+        responseAdapter = new ResponsesAdapter(getContext(), responses, apiService, preferences,
+                view, activity);
 
         initViews();
-        getDiscussions(0);
+        getResponses(0);
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -189,7 +183,7 @@ public class DiscussionsFragment extends Fragment {
                 super.onScrollStateChanged(recyclerView, newState);
 
                 if (!recyclerView.canScrollVertically(1) && page != -1) {
-                    getDiscussions(++page);
+                    getResponses(++page);
                 }
             }
         });
@@ -213,14 +207,14 @@ public class DiscussionsFragment extends Fragment {
                     + " must implement OnFragmentInteractionListener");
         }
 
+        Bundle arguments = getArguments();
+
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
-        fm = getFragmentManager();
 
-        discussionsAdapter = new DiscussionsAdapter(getContext(), discussions, fm);
-
-        Methods.setToolbarTitle(activity, "Discussions");
+        responseType = arguments.getString("responseType");
+        discussionID = arguments.getInt("id");
     }
 
     @Override
@@ -235,19 +229,8 @@ public class DiscussionsFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        menu.clear();
-        inflater.inflate(R.menu.toolbar_discussions, menu);
         super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_submit_discussion:
-                Methods.addFragment(new DiscussionAddFragment(), fm);
-                break;
-        }
-
-        return super.onOptionsItemSelected(item);
+        menu.clear();
+        inflater.inflate(R.menu.toolbar_empty, menu);
     }
 }

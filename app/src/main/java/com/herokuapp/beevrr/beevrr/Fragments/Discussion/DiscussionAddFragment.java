@@ -11,17 +11,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.ChangePasswordFragment;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
@@ -29,13 +28,11 @@ import com.herokuapp.beevrr.beevrr.Retrofit.APIClient;
 import com.herokuapp.beevrr.beevrr.Retrofit.APIInterface;
 import com.jayway.jsonpath.JsonPath;
 
-import org.w3c.dom.Text;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AddDiscussionFragment extends Fragment {
+public class DiscussionAddFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -44,11 +41,10 @@ public class AddDiscussionFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    Activity activity;
-    Preferences preferences;
-    APIInterface apiService;
-    View view;
-    Toolbar toolbar;
+    private Activity activity;
+    private Preferences preferences;
+    private APIInterface apiService;
+    private View view;
 
     private TextView proposition;
     private TextView argument;
@@ -135,21 +131,19 @@ public class AddDiscussionFragment extends Fragment {
     private void initButtonListeners() {
         submitDiscussion.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                submitDiscussion.setEnabled(false);
                 postDiscussionSubmit();
+                submitDiscussion.onEditorAction(EditorInfo.IME_ACTION_DONE);
             }
         });
     }
 
     private void postDiscussionSubmit() {
-        String prop = proposition.getText().toString();
-        String arg = argument.getText().toString();
-
-        apiService.submitDiscussion(prop, arg, preArgLength, argLength,
-                postArgLength).enqueue(new Callback<String>() {
+        apiService.submitDiscussion(proposition.getText().toString(), argument.getText().toString(),
+                preArgLength, argLength, postArgLength).enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 String result = String.valueOf(response.body());
-
                 String snackMessage;
 
                 try {
@@ -157,34 +151,36 @@ public class AddDiscussionFragment extends Fragment {
 
                     if (status.compareTo("not_logged_in") == 0) {
                         snackMessage = "Not logged in!";
-                        preferences.setLoginStatus(false);
+                        submitDiscussion.setEnabled(true);
                     } else if (status.compareTo("failure") == 0) {
                         snackMessage = "Discussion submission failed!";
+                        submitDiscussion.setEnabled(true);
                     } else {
                         snackMessage = "Discussion submitted!";
+                        Methods.setFragment(new DiscussionsFragment(), getFragmentManager());
                     }
                 } catch (Exception e) {
-                    snackMessage = "Discussion submission failed!";
+                    snackMessage = "Please wait before submitting a discussion again!";
+                    submitDiscussion.setEnabled(true);
                 }
 
                 Methods.snackbar(view, activity, snackMessage);
                 Methods.setCookies(response, preferences);
-
-                Methods.setFragment(new DiscussionsFragment(), getFragmentManager());
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
                 Methods.snackbar(view, activity, "Failed to connect!");
+                submitDiscussion.setEnabled(false);
             }
         });
     }
 
-    public AddDiscussionFragment() {
+    public DiscussionAddFragment() {
     }
 
-    public static AddDiscussionFragment newInstance(String param1, String param2) {
-        AddDiscussionFragment fragment = new AddDiscussionFragment();
+    public static DiscussionAddFragment newInstance(String param1, String param2) {
+        DiscussionAddFragment fragment = new DiscussionAddFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -208,6 +204,8 @@ public class AddDiscussionFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_add_discussion, container, false);
+
+        setHasOptionsMenu(true);
 
         initViews();
         initRadioListeners();
@@ -235,7 +233,6 @@ public class AddDiscussionFragment extends Fragment {
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
-        Methods.setToolbarTitle(activity, toolbar, "Beevrr");
     }
 
     @Override
@@ -246,5 +243,12 @@ public class AddDiscussionFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
+        inflater.inflate(R.menu.toolbar_empty, menu);
     }
 }

@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,29 +35,23 @@ public class LogoutFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    Activity activity;
-    Preferences preferences;
-    APIInterface apiService;
-    View view;
-    Toolbar toolbar;
+    private Activity activity;
+    private Preferences preferences;
+    private APIInterface apiService;
+    private View view;
 
     private void postLogout() {
         apiService.logout().enqueue(new Callback<String>() {
-            String snackMessage;
-            String result;
-            String status;
-
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                result = String.valueOf(response.body());
-                status = JsonPath.read(result, "$['status']");
+                String result = String.valueOf(response.body());
+                String status = JsonPath.read(result, "$['status']");
+                String snackMessage;
 
-                if (status.compareTo("failure") > 0) {
+                if (status.compareTo("success") == 0) {
                     snackMessage = "Logged out!";
-                    preferences.setLoginStatus(false);
                 } else {
                     snackMessage = "Not logged in!";
-                    preferences.setLoginStatus(false);
                 }
 
                 Methods.setCookies(response, preferences);
@@ -125,7 +118,8 @@ public class LogoutFragment extends Fragment {
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
-        Methods.setToolbarTitle(activity, toolbar, "Logout");
+
+        Methods.setToolbarTitle(activity, "Logout");
     }
 
     @Override

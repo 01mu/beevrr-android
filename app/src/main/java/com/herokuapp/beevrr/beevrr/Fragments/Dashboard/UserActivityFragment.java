@@ -3,7 +3,7 @@
     github.com/01mu
  */
 
-package com.herokuapp.beevrr.beevrr.Fragments.User;
+package com.herokuapp.beevrr.beevrr.Fragments.Dashboard;
 
 import android.app.Activity;
 import android.content.Context;
@@ -13,12 +13,10 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.AdapterHelpers.UserActivity;
 import com.herokuapp.beevrr.beevrr.Adapters.UserActivitiesAdapter;
@@ -45,23 +43,19 @@ public class UserActivityFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    Activity activity;
-    Preferences preferences;
-    APIInterface apiService;
-    View view;
-    Toolbar toolbar;
-
-    private LinearLayout progressBar;
+    private Activity activity;
+    private Preferences preferences;
+    private APIInterface apiService;
+    private View view;
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter userActivitiesAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private String header;
-    private String request;
-    private String userName;
-    private int userID;
+    private LinearLayout progressBar;
 
+    private String request;
+    private int userID;
     private List<UserActivity> userActivities = new ArrayList<>();
     private int page = 0;
 
@@ -93,14 +87,15 @@ public class UserActivityFragment extends Fragment {
     }
 
     private void activitiesResult(Response<String> response) {
+        String result = String.valueOf(response.body());
+        String status = JsonPath.read(result, "$['status']");
+
         List<Object> jsonActivities;
+
         String action;
         String opinion;
         String proposition;
         String date;
-
-        String result = String.valueOf(response.body());
-        String status = JsonPath.read(result, "$['status']");
 
         if (status.compareTo("success") == 0) {
             jsonActivities = JsonPath.read(result, "$['activities']");
@@ -184,20 +179,17 @@ public class UserActivityFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+
         Bundle arguments = getArguments();
 
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
 
-        header = arguments.getString("header");
         request = arguments.getString("request");
-        userName = arguments.getString("userName");
         userID = arguments.getInt("userID");
 
         userActivitiesAdapter = new UserActivitiesAdapter(getContext(), userActivities);
-
-        //Methods.setToolbarTitle(activity, toolbar, userName + "'s " + header);
     }
 
     @Override
@@ -208,5 +200,12 @@ public class UserActivityFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        page = 0;
+        userActivities.clear();
     }
 }

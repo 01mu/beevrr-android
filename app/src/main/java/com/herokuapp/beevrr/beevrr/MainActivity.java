@@ -19,16 +19,19 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.ChangeBioFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.ChangePasswordFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.DashboardFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.Discussion.AddDiscussionFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionsFragment;
 import com.herokuapp.beevrr.beevrr.Fragments.Auth.LoginFragment;
 import com.herokuapp.beevrr.beevrr.Fragments.Auth.LogoutFragment;
 import com.herokuapp.beevrr.beevrr.Fragments.Auth.RegisterFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.Discussion.ViewDiscussionFragment;
-import com.herokuapp.beevrr.beevrr.Fragments.User.UserActivityFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.ChangeBioFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.ChangePasswordFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.DashboardFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Dashboard.UserActivityFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionAddFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionRespondFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionResponsesFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionViewFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionVoteFragment;
+import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionsFragment;
 
 import static com.herokuapp.beevrr.beevrr.R.drawable.ic_menu_black_24dp;
 
@@ -41,9 +44,12 @@ public class MainActivity extends AppCompatActivity implements
         ChangeBioFragment.OnFragmentInteractionListener,
         ChangePasswordFragment.OnFragmentInteractionListener,
         UserActivityFragment.OnFragmentInteractionListener,
-        ViewDiscussionFragment.OnFragmentInteractionListener,
-        AddDiscussionFragment.OnFragmentInteractionListener {
-    FragmentManager fm;
+        DiscussionViewFragment.OnFragmentInteractionListener,
+        DiscussionAddFragment.OnFragmentInteractionListener,
+        DiscussionRespondFragment.OnFragmentInteractionListener,
+        DiscussionVoteFragment.OnFragmentInteractionListener,
+        DiscussionResponsesFragment.OnFragmentInteractionListener {
+    private static FragmentManager fm;
 
     private NavigationView navigationView;
     private DrawerLayout mDrawerLayout;
@@ -60,39 +66,37 @@ public class MainActivity extends AppCompatActivity implements
         Methods.setFragment(new DiscussionsFragment(), fm);
     }
 
-    private void setNavigationViews() {
-        setContentView(R.layout.activity_main);
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        toolbar.setTitle("Discussions");
-
-        ActionBar actionBar = getSupportActionBar();
-
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setHomeAsUpIndicator(ic_menu_black_24dp);
-        }
-
-        navigationView = findViewById(R.id.nav_view);
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_empty, menu);
         return true;
     }
 
+    private void setNavigationViews() {
+        Toolbar toolbar;
+        ActionBar actionBar;
+
+        setContentView(R.layout.activity_main);
+
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        actionBar = getSupportActionBar();
+
+        actionBar.setTitle("Discussions");
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeAsUpIndicator(ic_menu_black_24dp);
+
+        navigationView = findViewById(R.id.nav_view);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+    }
 
     private void setNavigationSelector() {
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
-                    Fragment set;
-
                     @Override
                     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                        Fragment set;
+
                         menuItem.setChecked(true);
                         mDrawerLayout.closeDrawers();
 
@@ -131,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 

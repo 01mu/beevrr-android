@@ -11,7 +11,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#fafafa"
-    tools:context=".Fragments.User.UserActivityFragment">
+    tools:context=".Fragments.Dashboard.UserActivityFragment">
 
     <LinearLayout
         android:id="@+id/progress_bar"

@@ -29,10 +29,6 @@ public class Preferences implements Serializable {
         return pref.getString("laravelSession", "0");
     }
 
-    public boolean getLoginStatus() {
-        return pref.getBoolean("loginStatus", false);
-    }
-
     public void setXSRFToken(String xsrfToken) {
         edit.putString("xsrfToken", xsrfToken);
         edit.commit();
@@ -40,11 +36,6 @@ public class Preferences implements Serializable {
 
     public void setLaravelSession(String laravelSession) {
         edit.putString("laravelSession", laravelSession);
-        edit.commit();
-    }
-
-    public void setLoginStatus(boolean status) {
-        edit.putBoolean("loginStatus", status);
         edit.commit();
     }
 }

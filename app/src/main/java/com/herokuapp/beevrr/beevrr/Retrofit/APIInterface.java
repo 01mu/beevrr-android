@@ -52,9 +52,6 @@ public interface APIInterface {
     @GET("discussion_view/{id}")
     Call<String> discussionView(@Path(value = "id", encoded = true) int id);
 
-    @GET("check")
-    Call<String> checkLoggedIn();
-
     @FormUrlEncoded
     @POST("disc_submit")
     Call<String> submitDiscussion(@Field("prop") String proposition,
@@ -62,4 +59,27 @@ public interface APIInterface {
                                   @Field("pa") String pa,
                                   @Field("a") String a,
                                   @Field("v") String v);
+
+    @FormUrlEncoded
+    @POST("resp_submit/{id}")
+    Call<String> submitResponse(@Path(value = "id", encoded = true) int id,
+                                @Field("resp") String response,
+                                @Field("type") String type);
+
+    @FormUrlEncoded
+    @POST("vote_submit/{phase}/{id}")
+    Call<String> submitVote(@Path(value = "phase", encoded = true) String phase,
+                            @Path(value = "id", encoded = true) int id,
+                            @Field("v") String type);
+
+    @GET("disc_like/{id}")
+    Call<String> discussionLike(@Path(value = "id", encoded = true) int id);
+
+    @GET("get_resp/{type}/{id}/p/{p}")
+    Call<String> getResponses(@Path(value = "type", encoded = true) String type,
+                              @Path(value = "id", encoded = true) int id,
+                              @Path(value = "p", encoded = true) int page);
+
+    @GET("resp_like/{id}")
+    Call<String> responseLike(@Path(value = "id", encoded = true) int id);
 }

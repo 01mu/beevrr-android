@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    beevrr-android
+    github.com/01mu
+-->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
+
+    <item
+        android:id="@+id/menu_for"
+        android:orderInCategory="100"
+        android:title="F"
+        android:icon="@drawable/response_for"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menu_against"
+        android:orderInCategory="200"
+        android:title="A"
+        android:icon="@drawable/response_against"
+        app:showAsAction="always" />
+
+</menu>

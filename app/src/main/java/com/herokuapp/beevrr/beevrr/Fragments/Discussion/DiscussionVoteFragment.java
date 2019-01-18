@@ -3,7 +3,7 @@
     github.com/01mu
  */
 
-package com.herokuapp.beevrr.beevrr.Fragments.Auth;
+package com.herokuapp.beevrr.beevrr.Fragments.Discussion;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,13 +12,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.RadioGroup;
 
-import com.herokuapp.beevrr.beevrr.Fragments.Discussion.DiscussionsFragment;
 import com.herokuapp.beevrr.beevrr.Methods;
 import com.herokuapp.beevrr.beevrr.Preferences;
 import com.herokuapp.beevrr.beevrr.R;
@@ -30,7 +31,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LoginFragment extends Fragment {
+public class DiscussionVoteFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -44,28 +45,50 @@ public class LoginFragment extends Fragment {
     private APIInterface apiService;
     private View view;
 
-    private Button login;
-    private TextView viewUsername;
-    private TextView viewPassword;
+    private RadioGroup responseType;
+    private Button submitVote;
+
+    private String currentPhase;
+    private int discussionID;
+    private String voteTypeString;
+    private int viewChoice;
 
     private void initViews() {
-        login = view.findViewById(R.id.login);
-        viewUsername = view.findViewById(R.id.username);
-        viewPassword = view.findViewById(R.id.password);
+        responseType = view.findViewById(R.id.vote_type);
+        submitVote = view.findViewById(R.id.submit_vote_button);
     }
 
-    private void initButtonListeners() {
-        login.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                postLogin();
-                login.onEditorAction(EditorInfo.IME_ACTION_DONE);
+    private void initRadioListeners() {
+        responseType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.vote_for:
+                        voteTypeString = "for";
+                        break;
+                    case R.id.vote_against:
+                        voteTypeString = "against";
+                        break;
+                    default:
+                        voteTypeString = "undecided";
+                        break;
+                }
             }
         });
     }
 
-    private void postLogin() {
-        apiService.login(viewUsername.getText().toString(),
-                viewPassword.getText().toString()).enqueue(new Callback<String>() {
+    private void initButtonListeners() {
+        submitVote.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                submitVote.setEnabled(false);
+                postVoteSubmit();
+                submitVote.onEditorAction(EditorInfo.IME_ACTION_DONE);
+            }
+        });
+    }
+
+    private void postVoteSubmit() {
+        apiService.submitVote(currentPhase, discussionID,
+                voteTypeString).enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 String result = String.valueOf(response.body());
@@ -74,32 +97,38 @@ public class LoginFragment extends Fragment {
                 try {
                     String status = JsonPath.read(result, "$['status']");
 
-                    if (status.compareTo("success") == 0) {
-                        snackMessage = "Logged in!";
-                        Methods.setFragment(new DiscussionsFragment(), getFragmentManager());
+                    if (status.compareTo("not_logged_in") == 0) {
+                        snackMessage = "Not logged in!";
+                        submitVote.setEnabled(true);
+                    } else if (status.compareTo("failure") == 0) {
+                        snackMessage = "Vote submission failed!";
+                        submitVote.setEnabled(true);
                     } else {
-                        snackMessage = "Login failed!";
+                        snackMessage = "Vote submitted!";
+                        Methods.setFragment(new DiscussionsFragment(), getFragmentManager());
                     }
                 } catch (Exception e) {
-                    snackMessage = "Please wait before attempting to login!";
+                    snackMessage = "Please wait before submitting a vote!";
+                    submitVote.setEnabled(true);
                 }
 
-                Methods.snackbar(view, getActivity(), snackMessage);
+                Methods.snackbar(view, activity, snackMessage);
                 Methods.setCookies(response, preferences);
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-                Methods.snackbar(view, getActivity(), "Failed to connect!");
+                Methods.snackbar(view, activity, "Failed to connect!");
+                submitVote.setEnabled(false);
             }
         });
     }
 
-    public LoginFragment() {
+    public DiscussionVoteFragment() {
     }
 
-    public static LoginFragment newInstance(String param1, String param2) {
-        LoginFragment fragment = new LoginFragment();
+    public static DiscussionVoteFragment newInstance(String param1, String param2) {
+        DiscussionVoteFragment fragment = new DiscussionVoteFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -114,14 +143,20 @@ public class LoginFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+        preferences = new Preferences(getActivity());
+        apiService = APIClient.getClient(getActivity()).create(APIInterface.class);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_login, container, false);
+        view = inflater.inflate(viewChoice, container, false);
+
+        setHasOptionsMenu(true);
 
         initViews();
+        initRadioListeners();
         initButtonListeners();
 
         return view;
@@ -143,11 +178,20 @@ public class LoginFragment extends Fragment {
                     + " must implement OnFragmentInteractionListener");
         }
 
+        Bundle arguments = getArguments();
+
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
 
-        Methods.setToolbarTitle(activity, "Login");
+        discussionID = arguments.getInt("id");
+        currentPhase = arguments.getString("currentPhase");
+
+        if (currentPhase.compareTo("pre-argument") == 0) {
+            viewChoice = R.layout.fragment_discussion_vote_pre;
+        } else {
+            viewChoice = R.layout.fragment_discussion_vote_post;
+        }
     }
 
     @Override
@@ -158,5 +202,11 @@ public class LoginFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        menu.clear();
+        super.onCreateOptionsMenu(menu, inflater);
     }
 }

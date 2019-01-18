@@ -6,22 +6,15 @@
 package com.herokuapp.beevrr.beevrr;
 
 import android.app.Activity;
-import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.view.View;
 import android.support.v7.widget.Toolbar;
-
-import com.herokuapp.beevrr.beevrr.Retrofit.APIClient;
-import com.herokuapp.beevrr.beevrr.Retrofit.APIInterface;
-import com.jayway.jsonpath.JsonPath;
+import android.view.View;
 
 import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 public class Methods {
@@ -63,39 +56,8 @@ public class Methods {
         }
     }
 
-    public static void setToolbarTitle(Activity activity, Toolbar toolbar, String message) {
-        toolbar = activity.findViewById(R.id.toolbar);
+    public static void setToolbarTitle(Activity activity, String message) {
+        Toolbar toolbar = activity.findViewById(R.id.toolbar);
         toolbar.setTitle(message);
-    }
-
-    public static void checkLoggedIn(final Preferences preferences, final View view,
-                                     final Activity activity, APIInterface apiService,
-                                     final Fragment fragment, final FragmentManager fm) {
-        apiService.checkLoggedIn().enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                String result = String.valueOf(response.body());
-                String status = JsonPath.read(result, "$['status']");
-
-                boolean loggedIn = false;
-
-                if (status.compareTo("success") == 0) {
-                    loggedIn = JsonPath.read(result, "$['logged_in']");
-                }
-
-                if(loggedIn) {
-                    Methods.addFragment(fragment, fm);
-                } else {
-                    Methods.snackbar(view, activity, "Not logged in!");
-                }
-
-                Methods.setCookies(response, preferences);
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-                Methods.snackbar(view, activity, "Failed to connect!");
-            }
-        });
     }
 }

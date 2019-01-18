@@ -3,7 +3,7 @@
     github.com/01mu
  */
 
-package com.herokuapp.beevrr.beevrr.Fragments.Dashboard;
+package com.herokuapp.beevrr.beevrr.Fragments.Discussion;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,10 +12,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.herokuapp.beevrr.beevrr.Methods;
@@ -29,7 +32,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ChangePasswordFragment extends Fragment {
+public class DiscussionRespondFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -43,64 +46,87 @@ public class ChangePasswordFragment extends Fragment {
     private APIInterface apiService;
     private View view;
 
-    private TextView changePWFieldOld;
-    private TextView changePWFieldOldC;
-    private TextView changePWFieldNew;
-    private TextView changePWFieldNewC;
-    private Button changePWSubmit;
+    private TextView response;
+    private RadioGroup responseType;
+    private Button submitResponse;
+
+    private int discussionID;
+    private String responseTypeString;
 
     private void initViews() {
-        changePWFieldOld = view.findViewById(R.id.old_password);
-        changePWFieldOldC = view.findViewById(R.id.confirm_old_password);
-        changePWFieldNew = view.findViewById(R.id.new_password);
-        changePWFieldNewC = view.findViewById(R.id.confirm_new_password);
-        changePWSubmit = view.findViewById(R.id.change_pw_submit);
+        response = view.findViewById(R.id.response_text);
+        responseType = view.findViewById(R.id.response_type);
+        submitResponse = view.findViewById(R.id.submit_response_button);
     }
 
-    private void initButtonListeners() {
-        changePWSubmit.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                postPasswordChange();
-                changePWSubmit.onEditorAction(EditorInfo.IME_ACTION_DONE);
+    private void initRadioListeners() {
+        responseType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.response_for:
+                        responseTypeString = "for";
+                        break;
+                    default:
+                        responseTypeString = "against";
+                        break;
+                }
             }
         });
     }
 
-    private void postPasswordChange() {
-        apiService.changePassword(changePWFieldOld.getText().toString(),
-                changePWFieldOldC.getText().toString(), changePWFieldNew.getText().toString(),
-                changePWFieldNewC.getText().toString()).enqueue(new Callback<String>() {
+    private void initButtonListeners() {
+        submitResponse.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                submitResponse.setEnabled(false);
+                postResponseSubmit();
+                submitResponse.onEditorAction(EditorInfo.IME_ACTION_DONE);
+            }
+        });
+    }
+
+    private void postResponseSubmit() {
+        apiService.submitResponse(discussionID, response.getText().toString(),
+                responseTypeString).enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 String result = String.valueOf(response.body());
-                String status = JsonPath.read(result, "$['status']");
                 String snackMessage;
 
-                if (status.compareTo("not_logged_in") == 0) {
-                    snackMessage = "Not logged in!";
-                } else if (status.compareTo("failure") == 0) {
-                    snackMessage = "Password change failed!";
-                } else {
-                    snackMessage = "Password changed! Logged out.";
+                try {
+                    String status = JsonPath.read(result, "$['status']");
+
+                    if (status.compareTo("not_logged_in") == 0) {
+                        snackMessage = "Not logged in!";
+                        submitResponse.setEnabled(true);
+                    } else if (status.compareTo("failure") == 0) {
+                        snackMessage = "Response submission failed!";
+                        submitResponse.setEnabled(true);
+                    } else {
+                        snackMessage = "Response submitted!";
+                        Methods.setFragment(new DiscussionsFragment(), getFragmentManager());
+                    }
+                } catch (Exception e) {
+                    snackMessage = "Please wait before submitting a response!";
+                    submitResponse.setEnabled(true);
                 }
 
+                Methods.snackbar(view, activity, snackMessage);
                 Methods.setCookies(response, preferences);
-                Methods.snackbar(view, getActivity(), snackMessage);
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-                Methods.snackbar(view, getActivity(), "Failed to connect!");
+                Methods.snackbar(view, activity, "Failed to connect!");
+                submitResponse.setEnabled(false);
             }
         });
     }
 
-    public ChangePasswordFragment() {
-
+    public DiscussionRespondFragment() {
     }
 
-    public static ChangePasswordFragment newInstance(String param1, String param2) {
-        ChangePasswordFragment fragment = new ChangePasswordFragment();
+    public static DiscussionRespondFragment newInstance(String param1, String param2) {
+        DiscussionRespondFragment fragment = new DiscussionRespondFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -115,14 +141,21 @@ public class ChangePasswordFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+        preferences = new Preferences(getActivity());
+        apiService = APIClient.getClient(getActivity()).create(APIInterface.class);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_change_password, container, false);
+        view = inflater.inflate(R.layout.fragment_discussion_respond, container,
+                false);
+
+        setHasOptionsMenu(true);
 
         initViews();
+        initRadioListeners();
         initButtonListeners();
 
         return view;
@@ -147,6 +180,8 @@ public class ChangePasswordFragment extends Fragment {
         activity = getActivity();
         preferences = new Preferences(activity);
         apiService = APIClient.getClient(activity).create(APIInterface.class);
+
+        discussionID = getArguments().getInt("id");
     }
 
     @Override
@@ -157,5 +192,11 @@ public class ChangePasswordFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
     }
 }

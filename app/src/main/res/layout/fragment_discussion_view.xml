@@ -11,13 +11,14 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#fafafa"
-    tools:context=".Fragments.Discussion.ViewDiscussionFragment">
+    tools:context=".Fragments.Discussion.DiscussionViewFragment">
 
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <LinearLayout
+            android:layout_marginBottom="16dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
@@ -110,7 +111,7 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:text="Posted by "
+                        android:text="by "
                         android:layout_marginLeft="16dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    beevrr-android
+    github.com/01mu
+-->
+
 <menu
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -9,6 +15,6 @@
         android:id="@+id/menu_submit_discussion"
         android:orderInCategory="100"
         android:title="Submit"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="collapseActionView" />
 
 </menu>
